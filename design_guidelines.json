@@ -1,0 +1,112 @@
+{
+  "theme": "dark",
+  "archetype": "The Performance Pro",
+  "design_philosophy": "Tactical Minimalism. The interface must feel like a high-performance command center. Eliminate the boring purple/pink gradient and replace it with a hyper-focused, distraction-free environment. Contrast and typography are the primary structural elements.",
+  "colors": {
+    "background": {
+      "base": "#0A0A0A",
+      "surface": "#121212",
+      "surface_hover": "#18181B"
+    },
+    "text": {
+      "primary": "#FFFFFF",
+      "secondary": "#A1A1AA",
+      "muted": "#52525B",
+      "untyped": "#3F3F46",
+      "correct": "#F4F4F5"
+    },
+    "border": {
+      "default": "rgba(255, 255, 255, 0.1)",
+      "focus": "#007AFF",
+      "transparent": "transparent"
+    },
+    "accent": {
+      "primary": "#007AFF",
+      "primary_hover": "#3B82F6",
+      "error": "#FF3B30",
+      "error_bg": "rgba(255, 59, 48, 0.2)",
+      "success": "#34C759",
+      "glow": "rgba(0, 122, 255, 0.5)"
+    }
+  },
+  "typography": {
+    "font_families": {
+      "heading": "Outfit",
+      "body": "Outfit",
+      "mono": "JetBrains Mono"
+    },
+    "scales": {
+      "h1_results": "text-6xl md:text-8xl tracking-tighter font-black",
+      "h2_section": "text-2xl md:text-3xl tracking-tight font-bold",
+      "h3_widget": "text-lg md:text-xl font-semibold",
+      "typing_area": "text-2xl md:text-3xl lg:text-4xl leading-relaxed font-medium tracking-wide",
+      "hud_stats": "text-xl md:text-2xl font-bold font-mono tracking-tight",
+      "labels": "text-xs tracking-[0.2em] uppercase font-bold text-zinc-500"
+    }
+  },
+  "spacing_and_layout": {
+    "global_padding": "p-6 md:p-12 lg:p-24",
+    "bento_grid": {
+      "results_container": "grid grid-cols-1 md:grid-cols-4 gap-6",
+      "wpm_hero_card": "col-span-1 md:col-span-2 row-span-2 bg-[#121212] border border-white/10 p-8 rounded-xl flex flex-col justify-center items-center relative overflow-hidden",
+      "stats_card": "col-span-1 border border-white/10 bg-[#121212] p-6 rounded-xl flex flex-col justify-between",
+      "chart_card": "col-span-1 md:col-span-4 border border-white/10 bg-[#121212] p-6 rounded-xl h-64 mt-6"
+    },
+    "typing_container": "max-w-5xl mx-auto w-full relative mt-16"
+  },
+  "components": {
+    "typing_area": {
+      "description": "The hero component. A distraction-free zone.",
+      "caret": "A solid block or thick underline in Volt Blue (#007AFF). Must have smooth transition tracking using framer-motion (transition-all duration-100 ease-out) and a blinking animation when idle.",
+      "character_states": {
+        "untyped": "text-zinc-600",
+        "correct": "text-zinc-100 drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]",
+        "incorrect": "text-red-500 bg-red-500/20 rounded-sm",
+        "incorrect_extra": "text-red-800 bg-red-500/40 rounded-sm"
+      }
+    },
+    "mode_selector": {
+      "description": "Tactical pill toggles to select time (15/30/60) or words (10/25/50).",
+      "style": "Neumorphic / Technical. bg-zinc-900 rounded-full p-1 inline-flex gap-1 border border-white/5",
+      "item_active": "bg-zinc-800 text-white rounded-full px-4 py-1.5 text-sm font-medium shadow-sm transition-all",
+      "item_inactive": "text-zinc-500 hover:text-zinc-300 px-4 py-1.5 text-sm font-medium transition-all"
+    },
+    "hud": {
+      "description": "Live stats during typing. Must be unobtrusive.",
+      "style": "Flex container above or below the typing area. Uses the 'labels' typography for titles and 'hud_stats' for values. Opacity decreases when actively typing to prevent distraction."
+    },
+    "buttons": {
+      "primary": "bg-accent-primary text-white font-bold py-3 px-6 rounded-lg hover:bg-accent-primary_hover transition-colors shadow-[0_0_15px_rgba(0,122,255,0.3)] hover:shadow-[0_0_25px_rgba(0,122,255,0.5)] focus:ring-2 focus:ring-blue-400 focus:outline-none",
+      "ghost": "text-zinc-400 hover:text-white hover:bg-zinc-800 py-2 px-4 rounded-lg transition-colors focus:ring-2 focus:ring-zinc-600 focus:outline-none",
+      "restart_action": "Tab + Enter shortcut explicitly shown. Ghost button style but circular icon focus."
+    },
+    "results_screen": {
+      "description": "Shown after test completion. High visual reward.",
+      "chart": "Use Recharts. Line chart with neon blue stroke (#007AFF), gradient fill (from-blue-500/20 to-transparent), hide grid lines, simple tooltip.",
+      "celebration": "Use a subtle particle effect (tsparticles or react-confetti with dark-theme friendly colors like gold/blue/white) if WPM > Personal Best."
+    }
+  },
+  "motion_and_interactions": {
+    "page_load": "Fade in typing area with a slight Y translation (y: 20 -> 0, opacity: 0 -> 1).",
+    "results_reveal": "Staggered bento grid reveal. (delay 0.1s per card).",
+    "hover_states": "All buttons must lift slightly (-translate-y-[1px]) and brighten.",
+    "typing_feedback": "Subtle error shake animation on the caret or word if an entire word is submitted wrong."
+  },
+  "accessibility": {
+    "contrast": "Ensure all text meets at least 4.5:1 ratio against the deep obsidian background.",
+    "focus": "Visible focus states for keyboard navigation on all interactive elements (buttons, toggles).",
+    "reduced_motion": "Respect prefers-reduced-motion for the caret tracking and results animations.",
+    "testing": "All interactive elements must have data-testid attributes (e.g., data-testid='mode-selector-15s', data-testid='restart-button')."
+  },
+  "tech_stack_recommendations": {
+    "frontend": ["React", "Tailwind CSS", "Framer Motion (for caret and layout animations)", "Recharts (for WPM over time)", "Lucide React (for icons)"],
+    "backend": ["FastAPI", "SQLite/PostgreSQL (for leaderboard)"]
+  },
+  "instructions_to_main_agent": [
+    "Install JetBrains Mono and Outfit fonts from Google Fonts in the global CSS.",
+    "Implement the typing engine with a robust state: tracking untyped, correct, and incorrect strokes. Create an absolute positioned caret that updates its x/y coordinates based on the current character's DOM rect.",
+    "Build the bento grid layout for the results screen using pure Tailwind HTML/CSS classes provided in the spacing_and_layout section.",
+    "Do NOT use standard Shadcn cards for the main typing game area; use raw divs with the defined 'Technical' surface strategies to achieve the minimal look.",
+    "Ensure the typing input captures global keydown events without requiring a visible input field (or use a hidden input field that maintains focus)."
+  ]
+}
