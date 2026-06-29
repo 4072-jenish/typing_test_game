@@ -1,0 +1,44 @@
+{
+  "summary": "Tested TypingArena end-to-end. Backend: 12/12 pytest tests pass (text generation, randomness, all difficulties, quote, scores CRUD, leaderboard sort/filter, validation, stats). Frontend: all critical UI flows work — header, config bar (source/difficulty/mode/value), focus/blur, character highlighting, caret, word-mode auto-finish with results, time-mode timer countdown, leaderboard modal, save score, source/difficulty switching changes text. Two real bugs found: (1) Frontend shows 'Score saved!' even when backend rejects with 422; (2) Backend Score response leaks `_id` instead of `id`.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/scores & GET /api/leaderboard", "issue": "Score response contains `_id` field (raw mongo ObjectId as string) instead of an `id` field. The Pydantic Score model uses `alias=\"_id\"` causing the alias to be the serialized name. Per code-review guidelines, mongo `_id` should be excluded or aliased to `id`. Fix: use `serialization_alias='id'` or `model_dump(by_alias=False)`, or drop `_id` from output."},
+      {"endpoint": "POST /api/scores", "issue": "wpm cap is `le=400`. Realistic for humans but Playwright auto-typing yields ~700 wpm and causes valid-looking sessions to fail with 422 (which surfaced bug below). Consider raising to ~500 or accepting overflow."},
+      {"endpoint": "global", "issue": "@app.on_event('shutdown') is deprecated; should migrate to FastAPI lifespan handlers."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Results.jsx (handleSave)", "issue": "On clicking 'Save to Leaderboard', UI sets `saved=true` regardless of API outcome. When backend returns 422 (e.g., wpm > 400), the 'Score saved!' confirmation still appears even though nothing was persisted. Reproduced: word-mode/10 words, fast typing produced wpm=781 → backend 422 → UI still showed saved-confirm. Need to check the awaited submitScore success and surface an error on failure.", "selector": "[data-testid='save-score-btn']", "priority": "HIGH"}
+    ],
+    "integration_issues": [
+      {"flow": "Save score after very fast/long session", "issue": "Frontend swallows submitScore errors silently in App.js saveScore catch — there is no error state propagated to Results.jsx. Combine with the ui_bug above for full fix.", "affected_selectors": ["[data-testid='saved-confirm']", "[data-testid='save-score-btn']"]}
+    ],
+    "design_issues": [
+      {"screen": "Test screen", "issues": ["Hard difficulty sometimes produces consecutive digit-only tokens (e.g., '2754. Spend but 5920 gregarious 6513 ...') which feels less natural — consider lowering number-injection rate in hard mode for better aesthetic, though spec allows numbers."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_typing_arena.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "FIX (HIGH): Results.jsx should only show 'Score saved!' when submitScore resolves successfully. Make App.js saveScore return success/failure (rethrow or return boolean) and have Results display an error message on failure.",
+    "FIX (MED): Make POST /api/scores response expose `id` (not `_id`). Either change Field alias to serialization_alias='id' or post-process the dict before constructing Score.",
+    "Consider raising wpm cap on /api/scores (e.g., 600) to handle edge cases.",
+    "Migrate @app.on_event('shutdown') to FastAPI lifespan context manager."
+  ],
+  "critical_code_review_comments": [
+    "server.py Score model leaks mongo `_id`. Use serialization_alias='id' or exclude `_id` from the response.",
+    "App.js saveScore catches errors silently with no UI feedback — couples to Results.jsx bug above.",
+    "useTypingEngine.js: setTimeout(()=>finish(),0) inside setTyped updater works but the finish() reads stale `typed` via closure; observed stats are still correct because typedRef + computeStats(typed) are recomputed at finish time, but worth refactoring to derive seconds via startTime explicitly (which it does). OK.",
+    "Backend uses load_dotenv at import time and reads os.environ['MONGO_URL']/['DB_NAME'] — good (no defaults). CORS allow_origins from env, fine.",
+    "All interactive elements have data-testid — testability is excellent."
+  ],
+  "updated_files": ["/app/backend/tests/test_typing_arena.py"],
+  "success_rate": {"backend": "100% (12/12 pytest)", "frontend": "~90% — all flows render & function; save-confirmation is misleading on API error"},
+  "test_credentials": "N/A (no auth)",
+  "seed_data_creation": "Created TEST_pytest_user (wpm 88, time mode) and TEST_words_user (wpm 70, words mode) via /api/scores during pytest run; also created TEST_E2E score attempt that returned 422 (so DB not seeded for that one).",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend pytest file is /app/backend/tests/test_typing_arena.py — uses REACT_APP_BACKEND_URL. The save-score 'Saved!' on 422 bug is reproducible by typing a target via page.keyboard.type at default speed; Playwright generates wpm > 400 which the backend rejects. To retest after main agent's fix, run a word-mode 10 test, save with name, and verify (a) on success → saved-confirm visible, (b) on failure (e.g., force wpm>400) → an error indicator (not saved-confirm).",
+  "rca of the issue": "Results.jsx handleSave: `await onSave(...)` then unconditionally `setSaved(true)`. App.js saveScore wraps submitScore in try/catch that swallows the error. Therefore HTTP 422 from backend (wpm>400 validation) results in the same UX as success. Fix at either layer (return boolean from saveScore, or have it throw and let Results handle)."
+}
