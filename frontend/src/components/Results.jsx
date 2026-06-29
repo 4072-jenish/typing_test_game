@@ -20,14 +20,17 @@ export default function Results({ result, config, onRestart, onNext, onSave, isP
   const [name, setName] = useState(localStorage.getItem("ta_name") || "");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const handleSave = async () => {
     if (!name.trim() || saving) return;
     setSaving(true);
+    setSaveError(false);
     localStorage.setItem("ta_name", name.trim());
-    await onSave(name.trim());
+    const ok = await onSave(name.trim());
     setSaving(false);
-    setSaved(true);
+    if (ok) setSaved(true);
+    else setSaveError(true);
   };
 
   const chartData = (result.history || []).map((h) => ({
@@ -146,6 +149,11 @@ export default function Results({ result, config, onRestart, onNext, onSave, isP
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <Crown size={16} />}
                 Save to Leaderboard
               </button>
+              {saveError && (
+                <span className="text-red-400 text-sm font-medium ml-1" data-testid="save-error">
+                  Couldn't save — try again
+                </span>
+              )}
             </>
           ) : (
             <span className="inline-flex items-center gap-2 text-emerald-400 font-medium" data-testid="saved-confirm">

@@ -39,8 +39,8 @@ PyObjectId = Annotated[str, BeforeValidator(_validate_object_id)]
 # ---------- Models ----------
 class ScoreCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=24)
-    wpm: int = Field(..., ge=0, le=400)
-    raw_wpm: int = Field(0, ge=0, le=500)
+    wpm: int = Field(..., ge=0, le=600)
+    raw_wpm: int = Field(0, ge=0, le=800)
     accuracy: float = Field(..., ge=0, le=100)
     consistency: float = Field(0, ge=0, le=100)
     mode: str
@@ -124,7 +124,7 @@ def generate_words(count: int, difficulty: str) -> str:
                 words.append(random.choice(ADVANCED_WORDS))
             else:
                 words.append(random.choice(COMMON_WORDS))
-        words = _add_numbers(words, rate=0.12)
+        words = _add_numbers(words, rate=0.06)
         words = _add_punctuation(words)
         return " ".join(words)
 
@@ -166,7 +166,7 @@ async def get_text(
     return {"source": "words", "text": text, "author": None, "difficulty": difficulty}
 
 
-@api.post("/scores", response_model=Score)
+@api.post("/scores", response_model=Score, response_model_by_alias=False)
 async def create_score(payload: ScoreCreate):
     doc = payload.model_dump()
     doc["created_at"] = datetime.now(timezone.utc).isoformat()
@@ -175,7 +175,7 @@ async def create_score(payload: ScoreCreate):
     return Score(**doc)
 
 
-@api.get("/leaderboard", response_model=List[Score])
+@api.get("/leaderboard", response_model=List[Score], response_model_by_alias=False)
 async def leaderboard(
     mode: Optional[str] = None,
     limit: int = Query(20, ge=1, le=100),

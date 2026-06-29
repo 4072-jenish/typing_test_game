@@ -127,7 +127,7 @@ function App() {
 
   const saveScore = useCallback(
     async (name) => {
-      if (!result) return;
+      if (!result) return false;
       try {
         await submitScore({
           name,
@@ -141,8 +141,9 @@ function App() {
           characters: result.characters,
         });
         fetchGlobalStats().then(setGlobalStats).catch(() => {});
+        return true;
       } catch (e) {
-        // swallow
+        return false;
       }
     },
     [result, config]
